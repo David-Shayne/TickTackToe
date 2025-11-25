@@ -1,9 +1,9 @@
-// Gameboard Object (IIFE) initialization
+// Gameboard Object (IIFE) initialization - Factory Function
 const Gameboard = (function () {
 	let board = ["", "", "", "", "", "", "", "", ""];
 
 	//Winning logic
-	const getPlayerHasWon = function (markerID) {
+	function getPlayerHasWon(markerID) {
 		//Horizontal match
 		for (let i = 0; i <= 6; i += 3) {
 			if (board[i] === markerID && markerID === board[i + 1] && markerID === board[i + 2]) {
@@ -29,16 +29,16 @@ const Gameboard = (function () {
 		}
 
 		return false;
-	};
+	}
 
-	const placeMarker = function (markerID, index) {
+	function placeMarker(markerID, index) {
 		//Empty square check
 		if (board[index] !== "") {
 			throw Error("Square already has a marker on it!");
 		}
 
 		board[index] = markerID;
-	};
+	}
 
 	function printBoard() {
 		console.log(board.slice(0, 3));
@@ -57,43 +57,44 @@ const Gameboard = (function () {
 const Player = function (name, markerID, isComputer = false) {
 	let score = 0;
 
-	const getScore = function () {
+	function getScore() {
 		return score;
-	};
+	}
 
-	const incrementScore = function () {
+	function incrementScore() {
 		score++;
-	};
+	}
 
-	const getIsComputer = function () {
+	function getIsComputer() {
 		return isComputer;
-	};
+	}
 
 	return { getScore, incrementScore, name, markerID, getIsComputer };
 };
 
-const Game = function (Player, Gameboard) {
-	//Initialization
+// Game Object (IFFE) Initialization - Factory Function
+const Game = (function (Player, Gameboard) {
+	//Initialization of players
 	const computer = Player("Computer", "X", true);
-	const player1 = Player("Player 1", "O");
-	let roundCount = 0;
-	let winner = null;
+	const player1 = Player("Player 1", "O", false);
 
-	const startGame = function () {
+	//Setting up initial variables for later use
+	let roundCount = 0;
+
+	//Function to start the game's introductory text
+	function startGame() {
 		console.log(`Welcome ${player1.name} to tick tack toe!`);
 		console.log(`Below is the blank board.`);
 		console.log(
 			`Each co-ordinate is a number 1-9 corresponding to the squares top left to bottom right`
 		);
-	};
-
-	function setWinner(player) {
-		winner = player;
 	}
 
-	const playRound = function () {
+	function playRound() {
 		currentPlayerTurn = player1;
+		let winner = null;
 
+		//IFFE to initialize the round beginning actions
 		const initializeRound = (function () {
 			roundCount++;
 			console.log(`\nRound ${roundCount} Starting\n`);
@@ -101,15 +102,19 @@ const Game = function (Player, Gameboard) {
 			Gameboard.printBoard();
 		})();
 
-		const runTurn = function (player) {
+		function runTurn(player) {
+			//Returns the co-ordinates choice of where to place the marker (by either a player or computer)
 			function getChoice() {
 				if (player.getIsComputer()) {
 					let availableChoices = [];
 					Gameboard.getBoard().forEach((v, i) => {
 						if (v === "") {
+							//Set the choice to correspond with the 1-9 options rather than the index
 							availableChoices.push(i + 1);
 						}
 					});
+
+					//Process and return a random choice out of available choices (indexes of board array without a marker)
 					let choiceIndex = Math.floor(Math.random() * availableChoices.length);
 					return availableChoices[choiceIndex];
 				} else {
@@ -118,23 +123,23 @@ const Game = function (Player, Gameboard) {
 			}
 
 			function processChoice(choice) {
+				//Place a marker at the index of the choice generated
 				Gameboard.placeMarker(player.markerID, choice - 1);
 			}
 
 			function checkWinAndEndRound() {
-				//Check if the current player has won
+				//Check if the current player has won then set variable to end round
 				if (Gameboard.getPlayerHasWon(player.markerID)) {
-					setWinner(player);
+					winner = player;
 				}
 			}
 
-			//Run Turn function activation
-			let choice = getChoice();
-			processChoice(choice);
+			//Run Turn function activation and process
+			processChoice(getChoice());
 			console.log("\nNew board display:");
 			Gameboard.printBoard();
 			checkWinAndEndRound();
-		};
+		}
 
 		//Run turns till a player wins
 		do {
@@ -145,11 +150,10 @@ const Game = function (Player, Gameboard) {
 
 		//On end of round, set log message
 		console.log(`\n${winner.name} has won!`);
-	};
+	}
 
 	return { startGame, playRound };
-};
+})(Player, Gameboard);
 
-const game1 = Game(Player, Gameboard);
-game1.startGame();
-game1.playRound();
+Game.startGame();
+Game.playRound();
