@@ -72,11 +72,12 @@ const Player = function (name, markerID, isComputer = false) {
 	return { getScore, incrementScore, name, markerID, getIsComputer };
 };
 
-const Game = (function (Player, Gameboard) {
+const Game = function (Player, Gameboard) {
 	//Initialization
 	const computer = Player("Computer", "X", true);
 	const player1 = Player("Player 1", "O");
 	let roundCount = 0;
+	let winner = null;
 
 	const startGame = function () {
 		console.log(`Welcome ${player1.name} to tick tack toe!`);
@@ -86,7 +87,13 @@ const Game = (function (Player, Gameboard) {
 		);
 	};
 
+	function setWinner(player) {
+		winner = player;
+	}
+
 	const playRound = function () {
+		currentPlayerTurn = player1;
+
 		const initializeRound = (function () {
 			roundCount++;
 			console.log(`\nRound ${roundCount} Starting\n`);
@@ -103,11 +110,8 @@ const Game = (function (Player, Gameboard) {
 							availableChoices.push(i + 1);
 						}
 					});
-					let choice = availableChoices[Math.round(Math.random() * availableChoices.length - 1)];
-					console.log(availableChoices);
-					console.log(choice);
-
-					return choice;
+					let choiceIndex = Math.floor(Math.random() * availableChoices.length);
+					return availableChoices[choiceIndex];
 				} else {
 					return prompt("Enter your co-ordinates: ");
 				}
@@ -115,30 +119,37 @@ const Game = (function (Player, Gameboard) {
 
 			function processChoice(choice) {
 				Gameboard.placeMarker(player.markerID, choice - 1);
-				console.log("\nNew board display:");
-				Gameboard.printBoard();
 			}
 
-			function checkWin() {
+			function checkWinAndEndRound() {
 				//Check if the current player has won
 				if (Gameboard.getPlayerHasWon(player.markerID)) {
-					console.log(`${player.name} has won!!!`);
+					setWinner(player);
 				}
 			}
 
+			//Run Turn function activation
 			let choice = getChoice();
 			processChoice(choice);
-			checkWin();
+			console.log("\nNew board display:");
+			Gameboard.printBoard();
+			checkWinAndEndRound();
 		};
 
-		runTurn(computer);
-		runTurn(computer);
-		runTurn(computer);
-		runTurn(computer);
+		//Run turns till a player wins
+		do {
+			runTurn(currentPlayerTurn);
+			//Switch the next player
+			currentPlayerTurn = currentPlayerTurn === player1 ? computer : player1;
+		} while (!winner);
+
+		//On end of round, set log message
+		console.log(`\n${winner.name} has won!`);
 	};
 
 	return { startGame, playRound };
-})(Player, Gameboard);
+};
 
-Game.startGame();
-Game.playRound();
+const game1 = Game(Player, Gameboard);
+game1.startGame();
+game1.playRound();
