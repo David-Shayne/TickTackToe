@@ -40,17 +40,21 @@ const Gameboard = (function () {
 		board[index] = markerID;
 	};
 
-	const printBoard = function () {
+	function printBoard() {
 		console.log(board.slice(0, 3));
 		console.log(board.slice(3, 6));
 		console.log(board.slice(6));
-	};
+	}
 
-	return { getPlayerHasWon, placeMarker, printBoard };
+	function getBoard() {
+		return board;
+	}
+
+	return { getPlayerHasWon, placeMarker, printBoard, getBoard };
 })();
 
 //Player factory function
-const Player = function (name, markerID) {
+const Player = function (name, markerID, isComputer = false) {
 	let score = 0;
 
 	const getScore = function () {
@@ -61,12 +65,16 @@ const Player = function (name, markerID) {
 		score++;
 	};
 
-	return { getScore, incrementScore, name, markerID };
+	const getIsComputer = function () {
+		return isComputer;
+	};
+
+	return { getScore, incrementScore, name, markerID, getIsComputer };
 };
 
 const Game = (function (Player, Gameboard) {
 	//Initialization
-	const computer = Player("Computer", "X");
+	const computer = Player("Computer", "X", true);
 	const player1 = Player("Player 1", "O");
 	let roundCount = 0;
 
@@ -76,12 +84,57 @@ const Game = (function (Player, Gameboard) {
 		console.log(
 			`Each co-ordinate is a number 1-9 corresponding to the squares top left to bottom right`
 		);
-		Gameboard.printBoard();
 	};
 
 	const playRound = function () {
-		roundCount++;
-		console.log(`\nRound ${roundCount} Starting\n`);
+		const initializeRound = (function () {
+			roundCount++;
+			console.log(`\nRound ${roundCount} Starting\n`);
+			console.log(`Choose a square to place an ${player1.markerID}`);
+			Gameboard.printBoard();
+		})();
+
+		const runTurn = function (player) {
+			function getChoice() {
+				if (player.getIsComputer()) {
+					let availableChoices = [];
+					Gameboard.getBoard().forEach((v, i) => {
+						if (v === "") {
+							availableChoices.push(i + 1);
+						}
+					});
+					let choice = availableChoices[Math.round(Math.random() * availableChoices.length - 1)];
+					console.log(availableChoices);
+					console.log(choice);
+
+					return choice;
+				} else {
+					return prompt("Enter your co-ordinates: ");
+				}
+			}
+
+			function processChoice(choice) {
+				Gameboard.placeMarker(player.markerID, choice - 1);
+				console.log("\nNew board display:");
+				Gameboard.printBoard();
+			}
+
+			function checkWin() {
+				//Check if the current player has won
+				if (Gameboard.getPlayerHasWon(player.markerID)) {
+					console.log(`${player.name} has won!!!`);
+				}
+			}
+
+			let choice = getChoice();
+			processChoice(choice);
+			checkWin();
+		};
+
+		runTurn(computer);
+		runTurn(computer);
+		runTurn(computer);
+		runTurn(computer);
 	};
 
 	return { startGame, playRound };
