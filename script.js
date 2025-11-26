@@ -95,7 +95,7 @@ const Game = (function (Player, Gameboard, document) {
 		return !Gameboard.getBoard().includes("");
 	}
 
-	function playRound() {
+	function playRound(gameboardEle) {
 		//IFFE to initialize the round beginning actions
 		const initializeRound = (function () {
 			roundCount++;
@@ -131,7 +131,7 @@ const Game = (function (Player, Gameboard, document) {
 				if (Gameboard.getPlayerHasWon(player.markerID)) {
 					winner = player;
 					resultEle.toggleAttribute("hidden");
-					resultEle.textContent = `${player.name} has won!`;
+					resultEle.textContent = player.getIsComputer() ? "The computer won!" : "You won!";
 				} else if (getGameTied()) {
 					resultEle.toggleAttribute("hidden");
 					resultEle.textContent = "Game has ended in a tie!";
@@ -170,6 +170,8 @@ const tileEleArray = document.querySelectorAll(".tile");
 const startGameBtnEle = document.getElementById("start-game-btn");
 
 startGameBtnEle.addEventListener("click", (e) => {
+	e.target.classList.add("disabled");
+	e.target.textContent = "Game Started";
 	Game.startGame(tileEleArray);
-	Game.playRound();
+	Game.playRound(gameboardEle);
 });

@@ -64,6 +64,14 @@ header {
 	}
 }
 
+#start-game-btn.disabled {
+	background-color: gray;
+
+	&:hover {
+		cursor: default;
+	}
+}
+
 /* GAMEBOARD */
 :root {
 	--gameboard-height-width: 50vh;
