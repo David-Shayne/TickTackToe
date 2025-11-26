@@ -168,7 +168,6 @@ const Game = (function (Player, Gameboard, document) {
 //
 // DOM Manipulation
 //
-
 const gameboardEle = document.getElementById("gameboard");
 const tileEleArray = document.querySelectorAll(".tile");
 const startGameBtnEle = document.getElementById("start-game-btn");
