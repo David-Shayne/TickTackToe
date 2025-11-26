@@ -29,11 +29,39 @@ body {
 p,
 span {
 	font-size: var(--primary-font-size);
-	font-weight: 700;
 	margin: 0;
 }
 
 h1 {
 	font-size: var(--heading-font-size);
 	font-weight: 700;
+}
+
+body {
+	text-align: center;
+}
+
+/* HEADING */
+
+/* GAMEBOARD */
+:root {
+	--gameboard-height-width: 50vh;
+}
+
+#gameboard {
+	width: var(--gameboard-height-width);
+	height: var(--gameboard-height-width);
+	position: absolute;
+	top: calc(50vh - var(--gameboard-height-width) / 2);
+	left: calc(50vw - var(--gameboard-height-width) / 2);
+
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+}
+
+.tile {
+	border: 1px solid black;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
