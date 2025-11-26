@@ -1,6 +1,10 @@
-// Gameboard Object (IIFE) initialization - Factory Function
+// Gameboard Object (IIFE) initialization
 const Gameboard = (function (document) {
 	let board = ["", "", "", "", "", "", "", "", ""];
+
+	function resetBoard() {
+		board = ["", "", "", "", "", "", "", "", ""];
+	}
 
 	//Winning logic
 	function getPlayerHasWon(markerID) {
@@ -57,7 +61,7 @@ const Gameboard = (function (document) {
 		return board;
 	}
 
-	return { getPlayerHasWon, placeMarker, printBoard, getBoard };
+	return { getPlayerHasWon, placeMarker, printBoard, getBoard, resetBoard };
 })(document);
 
 //Player factory function
@@ -79,102 +83,109 @@ const Player = function (name, markerID, isComputer = false) {
 	return { getScore, incrementScore, name, markerID, getIsComputer };
 };
 
-// Game Object (IFFE) Initialization - Factory Function
+// Game Object (IFFE) Initialization
 const Game = (function (Player, Gameboard, document) {
 	//Initialization of players
 	const computer = Player("Computer", "X", true);
 	const player1 = Player("Player 1", "O", false);
 	const resultEle = document.getElementById("result");
+	const gameboardEle = document.getElementById("gameboard");
+	const tileEleArray = document.querySelectorAll(".tile");
 	let winner = null;
 
-	//Setting up initial variables for later use
-	let roundCount = 0;
-
 	//Function to start the game's introductory text
-	function startGame(tileEleArray) {
-		tileEleArray.forEach((e) => (e.textContent = ""));
+	function startGame() {
+		//Run turns till a player wins
+		gameboardEle.addEventListener("click", runRoundEventFunc);
 	}
 
 	function getGameTied() {
 		return !Gameboard.getBoard().includes("");
 	}
 
-	function playRound(gameboardEle) {
-		//IFFE to initialize the round beginning actions
-		const initializeRound = (function () {
-			roundCount++;
-		})();
+	function runTurn(player, tileEle) {
+		//Returns the co-ordinates choice of where to place the marker (by either a player or computer)
+		function getChoice() {
+			if (player.getIsComputer()) {
+				let availableChoices = [];
+				Gameboard.getBoard().forEach((v, i) => {
+					if (v === "") {
+						//Set the choice to correspond with the 1-9 options rather than the index
+						availableChoices.push(i + 1);
+					}
+				});
 
-		function runTurn(player, tileEle, resultEle) {
-			//Returns the co-ordinates choice of where to place the marker (by either a player or computer)
-			function getChoice() {
-				if (player.getIsComputer()) {
-					let availableChoices = [];
-					Gameboard.getBoard().forEach((v, i) => {
-						if (v === "") {
-							//Set the choice to correspond with the 1-9 options rather than the index
-							availableChoices.push(i + 1);
-						}
-					});
-
-					//Process and return a random choice out of available choices (indexes of board array without a marker)
-					let choiceIndex = Math.floor(Math.random() * availableChoices.length);
-					return availableChoices[choiceIndex];
-				} else {
-					return tileEle.id.slice(5);
-				}
+				//Process and return a random choice out of available choices (indexes of board array without a marker)
+				let choiceIndex = Math.floor(Math.random() * availableChoices.length);
+				return availableChoices[choiceIndex];
+			} else {
+				return tileEle.id.slice(5);
 			}
-
-			function processChoice(choice) {
-				//Place a marker at the index of the choice generated
-				Gameboard.placeMarker(player.markerID, choice - 1);
-			}
-
-			function checkWinAndEndRound() {
-				//Check if the current player has won then set variable to end round
-				if (Gameboard.getPlayerHasWon(player.markerID)) {
-					winner = player;
-					resultEle.toggleAttribute("hidden");
-					resultEle.textContent = player.getIsComputer() ? "The computer won!" : "You won!";
-				} else if (getGameTied()) {
-					resultEle.toggleAttribute("hidden");
-					resultEle.textContent = "Game has ended in a tie!";
-				}
-			}
-
-			//Run Turn function activation and process
-			processChoice(getChoice());
-			checkWinAndEndRound();
-
-			//When a player clicks a square
-			//Get choice of tile id
 		}
 
-		//Run turns till a player wins
-		gameboardEle.addEventListener("click", (e) => {
-			//Logic to make sure game has not ended
-			if (!winner && !getGameTied()) {
-				runTurn(player1, e.target, resultEle);
-				if (!winner && !getGameTied()) {
-					runTurn(computer, e.target, resultEle);
-				}
+		function processChoice(choice) {
+			//Place a marker at the index of the choice generated
+			Gameboard.placeMarker(player.markerID, choice - 1);
+		}
+
+		function checkWinAndEndRound() {
+			//Check if the current player has won then set variable to end round
+			if (Gameboard.getPlayerHasWon(player.markerID)) {
+				winner = player;
+				resultEle.toggleAttribute("hidden");
+				resultEle.textContent = player.getIsComputer() ? "The computer won!" : "You won!";
+			} else if (getGameTied()) {
+				resultEle.toggleAttribute("hidden");
+				resultEle.textContent = "Game has ended in a tie!";
 			}
-		});
+		}
+
+		//Run Turn function activation and process
+		processChoice(getChoice());
+		checkWinAndEndRound();
 	}
 
-	return { startGame, playRound };
+	//Function to be added to tile click event listener (each click)
+	function runRoundEventFunc(e) {
+		//Logic to make sure game has not ended
+		if (!winner && !getGameTied()) {
+			runTurn(player1, e.target);
+			if (!winner && !getGameTied()) {
+				runTurn(computer, e.target);
+			}
+		}
+	}
+
+	//Resets the game to base values and removes event listeners
+	function resetGame() {
+		tileEleArray.forEach((e) => {
+			e.textContent = "";
+			e.classList = "tile";
+		});
+
+		winner = null;
+		resultEle.toggleAttribute("hidden");
+		Gameboard.resetBoard();
+		gameboardEle.removeEventListener("click", runRoundEventFunc);
+	}
+
+	return { startGame, resetGame };
 })(Player, Gameboard, document);
 
 //
 // DOM Manipulation
 //
-const gameboardEle = document.getElementById("gameboard");
-const tileEleArray = document.querySelectorAll(".tile");
 const startGameBtnEle = document.getElementById("start-game-btn");
+const resetGameBtnEle = document.getElementById("reset-game-btn");
 
 startGameBtnEle.addEventListener("click", (e) => {
 	e.target.classList.add("disabled");
 	e.target.textContent = "Game Started";
-	Game.startGame(tileEleArray);
-	Game.playRound(gameboardEle);
+	Game.startGame();
+});
+
+resetGameBtnEle.addEventListener("click", (e) => {
+	startGameBtnEle.classList.remove("disabled");
+	startGameBtnEle.textContent = "Start Game";
+	Game.resetGame();
 });
