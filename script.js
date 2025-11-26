@@ -80,6 +80,7 @@ const Game = (function (Player, Gameboard, document) {
 	//Initialization of players
 	const computer = Player("Computer", "X", true);
 	const player1 = Player("Player 1", "O", false);
+	const resultEle = document.getElementById("result");
 	let winner = null;
 
 	//Setting up initial variables for later use
@@ -102,7 +103,7 @@ const Game = (function (Player, Gameboard, document) {
 
 		function runTurn(player, tileEle, resultEle) {
 			//Returns the co-ordinates choice of where to place the marker (by either a player or computer)
-			function getChoice(tileEle) {
+			function getChoice() {
 				if (player.getIsComputer()) {
 					let availableChoices = [];
 					Gameboard.getBoard().forEach((v, i) => {
@@ -129,15 +130,16 @@ const Game = (function (Player, Gameboard, document) {
 				//Check if the current player has won then set variable to end round
 				if (Gameboard.getPlayerHasWon(player.markerID)) {
 					winner = player;
-					console.log(`${player.name} has won!`);
+					resultEle.toggleAttribute("hidden");
+					resultEle.textContent = `${player.name} has won!`;
 				} else if (getGameTied()) {
-					resultEle.toggleProperty("hide");
+					resultEle.toggleAttribute("hidden");
 					resultEle.textContent = "Game has ended in a tie!";
 				}
 			}
 
 			//Run Turn function activation and process
-			processChoice(getChoice(tileEle));
+			processChoice(getChoice());
 			checkWinAndEndRound();
 
 			//When a player clicks a square
@@ -148,9 +150,9 @@ const Game = (function (Player, Gameboard, document) {
 		gameboardEle.addEventListener("click", (e) => {
 			//Logic to make sure game has not ended
 			if (!winner && !getGameTied()) {
-				runTurn(player1, e.target);
+				runTurn(player1, e.target, resultEle);
 				if (!winner && !getGameTied()) {
-					runTurn(computer, e.target);
+					runTurn(computer, e.target, resultEle);
 				}
 			}
 		});
