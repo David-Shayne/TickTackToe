@@ -42,6 +42,9 @@ body {
 }
 
 /* HEADING */
+header {
+	margin-top: var(--large-section-padding);
+}
 
 /* GAMEBOARD */
 :root {
