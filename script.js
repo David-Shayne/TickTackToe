@@ -1,5 +1,5 @@
 // Gameboard Object (IIFE) initialization - Factory Function
-const Gameboard = (function () {
+const Gameboard = (function (document) {
 	let board = ["", "", "", "", "", "", "", "", ""];
 
 	//Winning logic
@@ -34,8 +34,11 @@ const Gameboard = (function () {
 	function placeMarker(markerID, index) {
 		//Empty square check
 		if (board[index] !== "") {
-			throw Error("Square already has a marker on it!");
+			throw Error("Error placing marker");
 		}
+
+		let tileEle = document.getElementById(`tile-${index + 1}`);
+		tileEle.textContent = markerID;
 
 		board[index] = markerID;
 	}
@@ -51,7 +54,7 @@ const Gameboard = (function () {
 	}
 
 	return { getPlayerHasWon, placeMarker, printBoard, getBoard };
-})();
+})(document);
 
 //Player factory function
 const Player = function (name, markerID, isComputer = false) {
@@ -73,38 +76,33 @@ const Player = function (name, markerID, isComputer = false) {
 };
 
 // Game Object (IFFE) Initialization - Factory Function
-const Game = (function (Player, Gameboard) {
+const Game = (function (Player, Gameboard, document) {
 	//Initialization of players
 	const computer = Player("Computer", "X", true);
 	const player1 = Player("Player 1", "O", false);
+	let winner = null;
 
 	//Setting up initial variables for later use
 	let roundCount = 0;
 
 	//Function to start the game's introductory text
-	function startGame() {
-		console.log(`Welcome ${player1.name} to tick tack toe!`);
-		console.log(`Below is the blank board.`);
-		console.log(
-			`Each co-ordinate is a number 1-9 corresponding to the squares top left to bottom right`
-		);
+	function startGame(tileEleArray) {
+		tileEleArray.forEach((e) => (e.textContent = ""));
+	}
+
+	function getGameTied() {
+		return !Gameboard.getBoard().includes("");
 	}
 
 	function playRound() {
-		currentPlayerTurn = player1;
-		let winner = null;
-
 		//IFFE to initialize the round beginning actions
 		const initializeRound = (function () {
 			roundCount++;
-			console.log(`\nRound ${roundCount} Starting\n`);
-			console.log(`Choose a square to place an ${player1.markerID}`);
-			Gameboard.printBoard();
 		})();
 
-		function runTurn(player) {
+		function runTurn(player, tileEle, resultEle) {
 			//Returns the co-ordinates choice of where to place the marker (by either a player or computer)
-			function getChoice() {
+			function getChoice(tileEle) {
 				if (player.getIsComputer()) {
 					let availableChoices = [];
 					Gameboard.getBoard().forEach((v, i) => {
@@ -118,7 +116,7 @@ const Game = (function (Player, Gameboard) {
 					let choiceIndex = Math.floor(Math.random() * availableChoices.length);
 					return availableChoices[choiceIndex];
 				} else {
-					return prompt("Enter your co-ordinates: ");
+					return tileEle.id.slice(5);
 				}
 			}
 
@@ -131,33 +129,35 @@ const Game = (function (Player, Gameboard) {
 				//Check if the current player has won then set variable to end round
 				if (Gameboard.getPlayerHasWon(player.markerID)) {
 					winner = player;
+					console.log(`${player.name} has won!`);
+				} else if (getGameTied()) {
+					resultEle.toggleProperty("hide");
+					resultEle.textContent = "Game has ended in a tie!";
 				}
 			}
 
 			//Run Turn function activation and process
-			processChoice(getChoice());
-			console.log("\nNew board display:");
-			Gameboard.printBoard();
+			processChoice(getChoice(tileEle));
 			checkWinAndEndRound();
+
+			//When a player clicks a square
+			//Get choice of tile id
 		}
 
 		//Run turns till a player wins
-		do {
-			runTurn(currentPlayerTurn);
-			//Switch the next player
-			currentPlayerTurn = currentPlayerTurn === player1 ? computer : player1;
-		} while (!winner);
-
-		//On end of round, set log message
-		console.log(`\n${winner.name} has won!`);
+		gameboardEle.addEventListener("click", (e) => {
+			//Logic to make sure game has not ended
+			if (!winner && !getGameTied()) {
+				runTurn(player1, e.target);
+				if (!winner && !getGameTied()) {
+					runTurn(computer, e.target);
+				}
+			}
+		});
 	}
 
 	return { startGame, playRound };
-})(Player, Gameboard);
-
-//Introductory Text
-// Game.startGame();
-// Game.playRound();
+})(Player, Gameboard, document);
 
 //
 // DOM Manipulation
@@ -168,5 +168,6 @@ const tileEleArray = document.querySelectorAll(".tile");
 const startGameBtnEle = document.getElementById("start-game-btn");
 
 startGameBtnEle.addEventListener("click", (e) => {
-	tileEleArray.forEach((e) => (e.textContent = ""));
+	Game.startGame(tileEleArray);
+	Game.playRound();
 });
