@@ -158,3 +158,12 @@ const Game = (function (Player, Gameboard) {
 //Introductory Text
 // Game.startGame();
 // Game.playRound();
+
+//
+// DOM Manipulation
+//
+
+const gameboardEle = document.getElementById("gameboard");
+const tileEleArray = document.querySelectorAll(".tile");
+
+tileEleArray.forEach((e) => console.log(e.textContent));
