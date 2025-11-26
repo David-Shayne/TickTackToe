@@ -167,4 +167,6 @@ const gameboardEle = document.getElementById("gameboard");
 const tileEleArray = document.querySelectorAll(".tile");
 const startGameBtnEle = document.getElementById("start-game-btn");
 
-tileEleArray.forEach((e) => console.log(e.textContent));
+startGameBtnEle.addEventListener("click", (e) => {
+	tileEleArray.forEach((e) => (e.textContent = ""));
+});
