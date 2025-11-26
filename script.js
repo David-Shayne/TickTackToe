@@ -155,5 +155,6 @@ const Game = (function (Player, Gameboard) {
 	return { startGame, playRound };
 })(Player, Gameboard);
 
-Game.startGame();
-Game.playRound();
+//Introductory Text
+// Game.startGame();
+// Game.playRound();
