@@ -40,6 +40,10 @@ const Gameboard = (function (document) {
 		let tileEle = document.getElementById(`tile-${index + 1}`);
 		tileEle.textContent = markerID;
 
+		markerID === "O"
+			? tileEle.classList.add("selected-player")
+			: tileEle.classList.add("selected-comp");
+
 		board[index] = markerID;
 	}
 
